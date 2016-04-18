@@ -1,6 +1,6 @@
 var app = require('app')
 var BrowserWindow = require('browser-window')
-var ipc = require('ipc');
+var ipc = require('electron').ipcMain;
 var LocalStorage = require('node-localstorage').LocalStorage;
 localStorage = new LocalStorage('./storage');
 
@@ -8,13 +8,13 @@ app.on('ready', function(){
 
   var win = new BrowserWindow({
      show: false,
-     width: 480,
-     height: 320,
+     width: 1280,
+     height: 720,
      resizable: false,
      fullscreen: false,
      icon:'./pictures/anspirit.png'
    })
-  //win.webContents.openDevTools();
+  win.webContents.openDevTools();
   win.loadURL('file://' + __dirname + '/start.html');
   win.show();
 

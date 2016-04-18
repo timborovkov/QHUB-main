@@ -17,13 +17,15 @@
     "url": "https://github.com/timborovkov/QHUB-main/issues"
   },
   "homepage": "https://github.com/timborovkov/QHUB-main#readme",
-  "despencies": {
-    "electron-prebuilt": "0.37.6",
+  "devDependencies": {
+    "electron-prebuilt": "0.37.4",
     "download-file": "0.1.5",
     "forecast": "0.2.1",
     "request-ip": "1.1.4",
     "apiai": "1.0.8",
-    "node-localstorage": "1.1.2",
-    "jquery": "2.2.2"
+    "node-localstorage": "^1.1.2",
+    "jquery": "2.2.2",
+    "mkdirp": "0.5.1",
+    "path": "0.12.7"
   }
 }

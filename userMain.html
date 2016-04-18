@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Q Hub</title>
+    <script type="text/javascript">
+    var spl = require('./api/speechProcessingLoop');
+    require('./api/iot');
+
+    spl.beginSPL();
+
+    function tellHubSecret(){
+      var secret = qapi.getHubSecret();
+      var numbers = "";
+
+      for (var i = 0; i < secret.length; i++) {
+        num
+      }
+      
+      qSay("This hubs secret code is " + numbers , function() {
+
+      });
+    }
+    </script>
+  </head>
+  <body>
+    <h1>Done</h1>
+  </body>
+</html>
