@@ -10,7 +10,7 @@ var nest = require('cylon-nest');
 var Wemo = require('wemo-client');
 var wemo = new Wemo();
 //
-var easyBulb = require('LimitlessGEM');
+var easyBulb = require('limitless-gem');
 
 
 function performHomeAutomation(action, parameters, callback){
@@ -70,13 +70,13 @@ var devices = {
 
       // Turn the switch on
       client.setBinaryState(1);
-    }
+    });
   },
   "nest": function(action, device){
 
   },
   "ble": function(action, device){
-    
+
   }
 }
 

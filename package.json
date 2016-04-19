@@ -35,7 +35,9 @@
     "wemo-client": "0.7.0",
     "limitless-gem": "0.3.0",
     "node-ssdp": "2.7.0",
-    "xml2js": "0.4.16"
+    "xml2js": "0.4.16",
+    "request": "2.72.0",
+    "node-libnmap": "0.2.15"
   },
   "comments": {
     "0": "On ubuntu cylon-ble requires to run: sudo apt-get install libbluetooth-dev",

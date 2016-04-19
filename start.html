@@ -13,55 +13,52 @@
 		var started = 0;
 
 var qhubData = null;
-fs.open('./qhubData.json', 'a', function (err, fd) {
-		if (err) throw err;
+fs.open('./qhubData.json', 'rs', function (err, fd) {
 		if(err === null){
 			qhubData = JSON.parse(fs.readFileSync('./qhubData.json', 'utf8'));
+			continueSetupOnStartAfterRegistration();
+		}else{
+			//first
+			var qhubDataFile = {};
+			//Fist time
+			//1. Generate and save secret token
+				//Ganerate random int
+				var secretToken = Math.floor((Math.random() * 1000000000) + 0) + Math.floor((Math.random() * 1000000000) + 0);
+				qhubDataFile.secretToken = secretToken;
+				//Safe
+				console.log(JSON.stringify(qhubDataFile));
+				fs.writeFile('./qhubData.json', JSON.stringify(qhubDataFile), function(err) {
+					if(err) {
+						console.log(err);
+					} else {
+						console.log("qhubDataFile saved");
+						lStorage.setItem("hubToken", secretToken);
+					}
+				});
+			//2. Get location
+			qapi.getUserLocation(function(position){
+				//3. Register hub
+					//Send request to server
+					$.ajax({
+						url: 'http://api.anspirit.org/newHub',
+						type: 'get',
+						data: {'secret': secretToken, 'hubName': 'New QHub', 'latitude': position.coords.latitude, 'longitude': position.coords.longitude},
+						success: function(data){
+							//Done, hub is registered
+							//User must connect hub to it`s account using hub secret code
+							//TODO: hub & user pairing GUI/API
+
+							//3. Continue
+							continueSetupOnStartAfterRegistration();
+
+						},
+						error: function(a, er){
+							console.error(er);
+						}
+					});
+			});
 		}
 });
-
-if(qhubData !== null){
-	//else not first time
-	//Continue
-	continueSetupOnStartAfterRegistration();
-}else{
-	var qhubDataFile = [];
-	//Fist time
-	//1. Generate and save secret token
-		//Ganerate random int
-		var secretToken = Math.floor((Math.random() * 1000000000) + 0) + Math.floor((Math.random() * 1000000000) + 0);
-		qhubDataFile.secretToken = secretToken;
-		//Safe
-		fs.writeFile('./qhubData.json', JSON.stringify(qhubDataFile, null, 4), function(err) {
-	    if(err) {
-	      console.log(err);
-	    } else {
-	      console.log("qhubDataFile saved");
-				lStorage.setItem("hubToken", secretToken);
-	    }
-		});
-	//2. Register hub
-		//Send request to server
-		$.ajax({
-			url: 'http://api.anspirit.net/newHub',
-			type: 'get',
-			data: {'secret': secretToken, 'hubName': 'New QHub', 'latitude': 0.0, 'longitude': 0.0},
-			success: function(data){
-				console.log(data);
-
-				//Done, hub is registered
-				//User must connect hub to it`s account using hub secret code
-				//TODO: hub & user pairing GUI/API
-
-				//3. Continue
-				continueSetupOnStartAfterRegistration();
-
-			},
-			error: function(a, er){
-				console.error(er);
-			}
-		});
-}
 function continueSetupOnStartAfterRegistration(){
 	international.prepareTranslates(function(){
 
@@ -223,13 +220,11 @@ function continueSetupOnStartAfterRegistration(){
 	});
 }
 function startGUIMain(){
-	var sys = require('sys')
 	var exec = require('child_process').exec;
-	var child;
 	// executes `pwd`
-	child = exec("pwd", function (error, stdout, stderr) {
-	  sys.print('stdout: ' + stdout);
-	  sys.print('stderr: ' + stderr);
+	var child = exec("pwd", function (error, stdout, stderr) {
+	  console.log('stdout: ' + stdout);
+	  console.log('stderr: ' + stderr);
 	  if (error !== null) {
 	    console.log('exec error: ' + error);
 	  }
