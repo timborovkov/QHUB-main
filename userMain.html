@@ -4,8 +4,9 @@
     <meta charset="utf-8">
     <title>Q Hub</title>
     <script type="text/javascript">
-    var spl = require('./api/speechProcessingLoop');
-    require('./api/iot');
+    var extensions = require('api/extensions')
+    var spl = require('api/speechProcessingLoop');
+    var iot = require('api/iot');
 
     spl.beginSPL();
 
@@ -16,7 +17,7 @@
       for (var i = 0; i < secret.length; i++) {
         num
       }
-      
+
       qSay("This hubs secret code is " + numbers , function() {
 
       });

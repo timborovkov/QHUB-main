@@ -4,7 +4,7 @@
   "description": "Q Hub app",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"OK\" && exit 1",
     "start": "electron ."
   },
   "repository": {
@@ -26,6 +26,19 @@
     "node-localstorage": "^1.1.2",
     "jquery": "2.2.2",
     "mkdirp": "0.5.1",
-    "path": "0.12.7"
+    "path": "0.12.7",
+    "cylon": "1.2.0",
+    "cylon-hue": "0.7.0",
+    "cylon-nest": "0.10.0",
+    "cylon-api-http": "0.4.0",
+    "cylon-ble": "0.10.1",
+    "wemo-client": "0.7.0",
+    "limitless-gem": "0.3.0",
+    "node-ssdp": "2.7.0",
+    "xml2js": "0.4.16"
+  },
+  "comments": {
+    "0": "On ubuntu cylon-ble requires to run: sudo apt-get install libbluetooth-dev",
+    "1": "There is a cylon module for Belkin WeMo"
   }
 }
