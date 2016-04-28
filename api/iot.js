@@ -1,96 +1,108 @@
-//http://cylonjs.com
-var Cylon = require('cylon');
-//https://cylonjs.com/documentation/platforms/hue/
-var hue = require('cylon-hue');
-//https://www.npmjs.com/package/cylon-ble
-var ble = require('cylon-ble');
-//
-var nest = require('cylon-nest');
-//https://www.npmjs.com/package/wemo-client
-var Wemo = require('wemo-client');
-var wemo = new Wemo();
-//
-var easyBulb = require('limitless-gem');
+(function(){
+  //http://cylonjs.com
+  var Cylon = require('cylon');
+  //https://cylonjs.com/documentation/platforms/hue/
+  var hue = require('cylon-hue');
+  //https://www.npmjs.com/package/cylon-ble
+  var ble = require('cylon-ble');
+  //
+  var nest = require('cylon-nest');
+  //https://www.npmjs.com/package/wemo-client
+  var Wemo = require('wemo-client');
+  var wemo = new Wemo();
+  //MiLight & EasyBulb
+  var Milight = require("milight");
 
-
-function performHomeAutomation(action, parameters, callback){
-  if(action.contains('home')){
+  module.exports.performHomeAutomation = function(action, parameters, callback){
     //TODO
-    alert(action);
-    callback();
-  }else{
     callback();
   }
-}
 
-var devices = {
-  "hue": function(action, device){
-    Cylon.robot({
-      connections: {
-        hue: { adaptor: 'hue', host: '192.168.1.85', username: 'XXX' } //TODO where to get IP?
-      },
+  module.exports.devices = {
+    "hue": function(action, device){
+      Cylon.robot({
+        connections: {
+          hue: { adaptor: 'hue', host: '192.168.1.85', username: 'XXX' }
+        },
 
-      devices: {
-        bulb: { driver: 'hue-light', lightId: 2 }
-      },
+        devices: {
+          bulb: { driver: 'hue-light', lightId: 2 }
+        },
 
-      work: function(my) {
-        every((1).second(), function() {
-          my.bulb.toggle();
-        });
-      }
-    }).start();
-  },
-  "easybulb": function(action, device){
-    var con = easyBulb.createSocket({ host: '192.168.1.105' }); //TODO where to get IP?
-    /*
-    Commands
-          easyBulb.RGBW.ALL_OFF
-          easyBulb.RGBW.ALL_ON
-          easyBulb.RGBW.SET_COLOR_TO_VIOLET
-          easyBulb.RGBW.SET_COLOR_TO_ROYAL_MINT
-          easyBulb.RGBW.SET_COLOR_TO_YELLOW
-          easyBulb.RGBW.SET_COLOR_TO_PINK
-          easyBulb.RGBW.ALL_SET_TO_WHITE
-    all commands https://github.com/gembly/LimitlessGEM/tree/master/lib/commands
-    */
-    // con.send(cmd);
-  },
-  "wemo": function(action, device){
-    wemo.discover(function(deviceInfo) {
-      console.log('Wemo Device Found: %j', deviceInfo);
+        work: function(my) {
+          every((1).second(), function() {
+            my.bulb.toggle();
+          });
+        }
+      }).start();
+    },
+    "easybulb": function(action, adjustments, d){
+      var groupId = d.group || 1;
 
-      // Get the client for the found device
-      var client = wemo.client(deviceInfo);
-
-      // Handle BinaryState events
-      client.on('binaryState', function(value) {
-        console.log('Binary State changed to: %s', value);
+      var milight = new Milight({
+          host: d.ip,
+          broadcast: true
       });
 
-      // Turn the switch on
-      client.setBinaryState(1);
-    });
-  },
-  "nest": function(action, device){
+      switch (action) {
+        case 'on':
+            // All zones on
+            milight.zone(groupId).on();
+            res.send('{done: true}');
+          break;
+        case 'off':
+            // All zones on
+            milight.zone(groupId).off();
+            res.send('{done: true}');
+          break;
+        case 'color':
+            milight.zone(groupId).rgb(adjustments.color);
+            res.send('{done: true}');
+          break;
+        case 'white':
+            milight.zone(groupId).white(adjustments.brightness);
+            res.send('{done: true}');
+          break;
+        default:
+            res.send('{done: false}');
+      }
+    },
+    "wemo": function(action, device){
+      wemo.discover(function(deviceInfo) {
+        console.log('Wemo Device Found: %j', deviceInfo);
 
-  },
-  "ble": function(action, device){
+        // Get the client for the found device
+        var client = wemo.client(deviceInfo);
 
+        // Handle BinaryState events
+        client.on('binaryState', function(value) {
+          console.log('Binary State changed to: %s', value);
+        });
+
+        // Turn the switch on
+        client.setBinaryState(1);
+      });
+    },
+    "nest": function(action, device){
+
+    },
+    "ble": function(action, device){
+
+    }
   }
-}
 
-$("document").load(function(){
-  //TODO discover IoT devices in the same network
-  Cylon.api('http');
-});
+  $("document").ready(function(){
+    //TODO discover IoT devices in the same network
+    Cylon.api('http');
+  });
 
-window.setInterval(function(){
+  window.setInterval(function(){
 
-  //Ask server if there is a task for this hub
-  //Convert task to standart
-  //on, off, dim, bright, color
-  //Perform task
-  //Tell server about it
+    //Ask server if there is a task for this hub
+    //Convert task to standart
+    //on, off, dim, bright, color
+    //Perform task
+    //Tell server about it
 
-}, 100);
+  }, 100);
+})();

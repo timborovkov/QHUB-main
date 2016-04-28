@@ -17,7 +17,7 @@
     "url": "https://github.com/timborovkov/QHUB-main/issues"
   },
   "homepage": "https://github.com/timborovkov/QHUB-main#readme",
-  "devDependencies": {
+  "dependencies": {
     "electron-prebuilt": "0.37.4",
     "download-file": "0.1.5",
     "forecast": "0.2.1",
@@ -33,11 +33,13 @@
     "cylon-api-http": "0.4.0",
     "cylon-ble": "0.10.1",
     "wemo-client": "0.7.0",
-    "limitless-gem": "0.3.0",
     "node-ssdp": "2.7.0",
-    "xml2js": "0.4.16",
-    "request": "2.72.0",
-    "node-libnmap": "0.2.15"
+    "async": "1.0.0",
+    "geoip-lite": "1.1.6",
+    "getmac": "1.0.7",
+    "milight": "1.0.0",
+    "iotdb-arp": "0.0.6",
+    "request": "2.72.0"
   },
   "comments": {
     "0": "On ubuntu cylon-ble requires to run: sudo apt-get install libbluetooth-dev",

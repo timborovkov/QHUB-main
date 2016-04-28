@@ -1,9 +1,11 @@
+(function(){
   /*
   *     prepare
   */
   var qapi = require('./qapi');
   global.qapi = qapi;
   var international = require('./international'),
+  ext = require('./extensions');
   a = 1,
   wakeUpListener = new webkitSpeechRecognition(),
   mainListener = new webkitSpeechRecognition(),
@@ -47,7 +49,7 @@
     }
   }
 
-  function afterFirstExtensionsAreDone(extensions, callBack, speechRuleFound, speech){
+  function afterFirstExtensionsAreDone(callBack, speechRuleFound, speech){
       if(!speechRuleFound){
           //Get action, speech response and options from Api.ai
           qapi.apiAi(speech, function(response){
@@ -60,30 +62,7 @@
               performHomeAutomation(response.result.action, response.result.parameters, function(){
                 var speechResponse = response.result.fulfillment.speech;
                 var htmlResponse = response.result.metadata.html;
-                //Search extension to process action and return
-                var doneActionProcessFromSpeechExtensionsCount = 0;
-                if (extensions.length > 0) {
-                  for(var i = 0; i < extensions.length; i++){
-                        var ruleData = extensions[i];
-                        var link = "../rules/" + ruleData["name"] + "/hub.js";
-                        var Rule = require(link);
-                        Rule.processActionFromSpeech(response.result.action, response.result.parameters, response.result.metadata.emotion,speech, function(ruleRes){
-                          doneActionProcessFromSpeechExtensionsCount = doneActionProcessFromSpeechExtensionsCount + 1;
-
-                          if(ruleRes.done === true){
-                            //Done, extension used
-                            afterSecondExtensionsAreDone(true);
-                          }else{
-                            if(doneActionProcessFromSpeechExtensionsCount == extensions.length){
-                              //Done, no extension found
-                              afterSecondExtensionsAreDone(false);
-                            }
-                          }
-                        });
-                    }
-                  }else{
-                    afterSecondExtensionsAreDone(false);
-                  }
+                ext.layer2(response, speech, afterSecondExtensionsAreDone);
               });
             }
             function afterSecondExtensionsAreDone(actionRuleFound){
@@ -111,10 +90,8 @@
         callBack();
       }
   }
-  function doSpeechProcessing(speech, callBack){
-      // Go through extensions to get action for speech request
-      $.getJSON("../rules.json", function(extensions) {
-          if(extensions.length === 0){
+function doSpeechProcessing(speech, callBack){
+          if(ext.extensions().length === 0){
             //No extensions found
             //Get action, speech response and options from Api.ai
             qapi.apiAi(speech, function(response){
@@ -144,33 +121,10 @@
               }
             });
           }else{
-
-            /*
-            *
-            */
-            var firstExtensionsCompletedCount = 0;
-            for(var i = 0; i < extensions.length; i++){
-                var ruleData = extensions[i],
-                link = "../rules/" + ruleData["name"] + "/hub.js",
-                Rule = require(link);
-                Rule.processSpeech(speech, function(ruleRes){
-                  if(ruleRes.done === true){
-                    afterFirstExtensionsAreDone(extensions, callBack, true, speech);
-                  }
-                  firstExtensionsCompletedCount++;
-
-                  if(firstExtensionsCompletedCount == extensions.length){
-                    afterFirstExtensionsAreDone(extensions, callBack, false, speech);
-                  }
-                });
-            }
-
-            /*
-            *
-            */
+            ext.layer1(speech, function(done){
+              afterFirstExtensionsAreDone(callBack, done, speech);
+            });
           }
-
-  		});
   }
 
   /*
@@ -298,3 +252,4 @@
       }
     }
   }, 100);
+})();

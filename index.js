@@ -8,8 +8,8 @@ app.on('ready', function(){
 
   var win = new BrowserWindow({
      show: false,
-     width: 1280,
-     height: 720,
+     width: 480,
+     height: 320,
      resizable: false,
      fullscreen: false,
      icon:'./pictures/anspirit.png'

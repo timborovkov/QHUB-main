@@ -10,6 +10,10 @@
     var iot = require('./api/iot');
     var discover = require('./api/discover');
 
+    discover.devices(function(discovered){
+      console.log(discovered);
+    });
+
     spl.beginSPL();
 
     function tellHubSecret(){
@@ -21,7 +25,7 @@
       }
 
       qSay("This hubs secret code is " + numbers , function() {
-
+        
       });
     }
     </script>
