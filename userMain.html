@@ -10,6 +10,9 @@
     var iot = require('./api/iot');
     var discover = require('./api/discover');
 
+    var qapi = require('.api/qapi');
+    var international = require('./api/international');
+
     discover.devices(function(discovered){
       console.log(discovered);
     });

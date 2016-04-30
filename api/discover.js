@@ -5,10 +5,9 @@
   var request = require('request');
 
   module.exports.devices = function(callback){
-    //TODO
     //Search for iot devices in local network
-    //Philips Hue, Osram Lightify, EasyBulb, Belkin WeMo
-    //Need to return: {"id": {"type": "lamp/socket", "is":"hue/lightify/easybulb/wemo", "ip":"192.168.1.x"}}
+    //Philips Hue, Osram Lightify, EasyBulb, Belkin WeMo, Nest...
+    //Need to return: [{"id": 1, "type": "lamp/socket", "is":"hue/lightify/easybulb/wemo", "ip":"192.168.1.x"}]
     var last_found = Date.now();
     var devices = {};
 
@@ -23,11 +22,11 @@
       devices[id] = newDevice;
     });
 
-    setInterval(function() {
-      if(last_found < Date.now() - 10000){
+    var interval1 = setInterval(function() {
+      if(last_found < Date.now() - 20000){
         //Ended search
         callback(devices);
-        clearInterval(this);
+        clearInterval(interval1);
       }else{
         //Still searching
       }
@@ -46,16 +45,16 @@
           devices.push(d);
         }
     });
-    setInterval(function() {
-      if(last_found < Date.now() - 15000){
+    var interval2 = setInterval(function() {
+      if(last_found < Date.now() - 20000){
         //Ended search
         console.log("Ended");
         searchInMacs(devices,  callback);
-        clearInterval(this);
+        clearInterval(interval2);
       }else{
         //Still searching
       }
-    }, 1000);
+    }, 5000);
   }
   function searchInMacs(d, callback){
     for (var i = 1; i < d.length; i++){

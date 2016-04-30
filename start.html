@@ -47,10 +47,11 @@ fs.open('./qhubData.json', 'rs', function (err, fd) {
 							//Done, hub is registered
 							//User must connect hub to it`s account using hub secret code
 							//TODO: hub & user pairing GUI/API
-
-							//3. Continue
-							continueSetupOnStartAfterRegistration();
-
+							//3. Wait until is connected and update user data
+							waitUntilRegistered(function(){
+								//4. Continue
+								continueSetupOnStartAfterRegistration();
+							});
 						},
 						error: function(a, er){
 							console.error(er);
@@ -228,8 +229,39 @@ function startGUIMain(){
 	  if (error !== null) {
 	    console.log('exec error: ' + error);
 	  }
-		$(location).attr('href','file://' + __dirname + '/userMain.html');
+		//$(location).attr('href','file://' + __dirname + '/userMain.html');
 	});
+}
+function waitUntilRegistered(callback){
+	console.log(1);
+	var timeout = setInterval(function(){
+		console.log(2);
+		$.ajax({
+			url: "http://api.anspirit.org/hub/isPaired",
+			data: {token: lStorage.getItem('hubToken')},
+			type: "post",
+			success: function(anwser){
+				console.log(anwser);
+				if(anwser.error === false){
+					if(anwser.paired === true){
+						//This hub is paired
+						callback();
+						clearInterval(timeout);
+					}else{
+						//Not yet paired
+					}
+				}else{
+					//Got an error from the server;
+					console.error(anwser.errorType);
+					clearInterval(timeout);
+				}
+			},
+			error: function(a, er){
+				console.error(er);
+			},
+			dataType: 'json'
+		});
+	}, 2000);
 }
 	</script>
 </head>

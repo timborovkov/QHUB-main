@@ -38,9 +38,7 @@
   function afterGetSpeech(speech){
     lastActionNow();
     if(speech.contains("secret") && speech.contains("code")){
-      qSay("My secret code is " + qapi.getHubSecret(), function(){
-        callBack();
-      });
+      tellHubSecret();
       eval("up()");
     }else{
       doSpeechProcessing(speech, function(){
