@@ -1,22 +1,28 @@
 {
-  "name": "qhub-main",
+  "name": "nw",
   "version": "1.0.0",
   "description": "Q Hub app",
-  "main": "index.js",
+  "main": "start.html",
   "scripts": {
-    "test": "echo \"OK\" && exit 1",
-    "start": "electron ."
+    "start": "/applications/nwjs.app/Contents/MacOS/nwjs . --remote-debugging-port=9922",
+    "up": "git add . && git commit -m 'update' && git push origin master"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/timborovkov/QHUB-main.git"
+  },
+  "window": {
+    "toolbar": true
+  },
+  "webkit": {
+    "plugin": true
   },
   "author": "Tim Borovkov",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/timborovkov/QHUB-main/issues"
   },
-  "homepage": "https://github.com/timborovkov/QHUB-main#readme",
+  "homepage": "http://anspirit.org",
   "dependencies": {
     "electron-prebuilt": "0.37.4",
     "download-file": "0.1.5",

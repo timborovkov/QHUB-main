@@ -6,27 +6,32 @@
 
   module.exports.devices = function(callback){
     //Search for iot devices in local network
-    //Philips Hue, Osram Lightify, EasyBulb, Belkin WeMo, Nest...
-    //Need to return: [{"id": 1, "type": "lamp/socket", "is":"hue/lightify/easybulb/wemo", "ip":"192.168.1.x"}]
+    //Philips Hue, Osram Lightify, EasyBulb, Belkin WeMo
+    //Need to return: {"id": {"type": "lamp/socket", "is":"hue/lightify/easybulb/wemo", "ip":"192.168.1.x"}}
     var last_found = Date.now();
-    var devices = {};
+    var devices = [{}];
 
     startSearch(function(d){
       //Set last time discovered a new device, to now
       last_found = Date.now();
-      //TODO: get devices id from the server or register new
 
-      //Create new device
-      var newDevice = {"type": d.type, "is": d.name, "ip": d.ip};
-      //add found device to devices
-      devices[id] = newDevice;
+      //Create new device var
+      var newDevice = {"name": d.name, "type": d.type, "connectionType": d.connectionType,"ip": d.ip};
+
+      if(devices[0] == {}){
+        devices[0] = newDevice;
+      }else{
+        //add found device to devices
+        var index = device.length;
+        devices[index] = newDevice;
+      }
     });
 
-    var interval1 = setInterval(function() {
-      if(last_found < Date.now() - 20000){
+    var interval = setInterval(function() {
+      if(last_found < Date.now() - 10000){
         //Ended search
         callback(devices);
-        clearInterval(interval1);
+        clearInterval(interval);
       }else{
         //Still searching
       }
@@ -34,27 +39,27 @@
   };
 
   function startSearch(callback){
-    var devices = [[]];
+    var devices = {};
     var last_found = Date.now();
     browser.browser({}, function(error, d){
         if (error) {
             console.error(error);
-        } else if (d) {
+        } else if (d){
           last_found = Date.now();
-          //console.log("ip: "+d.ip + " mac: "+d.mac);
-          devices.push(d);
+          var index = devices.length;
+          devices[index] = d;
         }
     });
-    var interval2 = setInterval(function() {
-      if(last_found < Date.now() - 20000){
+    var intervalMAC = setInterval(function() {
+      if(last_found < Date.now() - 15000){
         //Ended search
         console.log("Ended");
-        searchInMacs(devices,  callback);
-        clearInterval(interval2);
+        searchInMacs(devices, callback);
+        clearInterval(intervalMAC);
       }else{
         //Still searching
       }
-    }, 5000);
+    }, 1000);
   }
   function searchInMacs(d, callback){
     for (var i = 1; i < d.length; i++){
@@ -68,10 +73,10 @@
               console.log("Mac: " + d.mac);
               console.log("Vendor" + vendor);
 
-              callback({"ip": d.ip, "name": "easybulb", "type": "lamp"});
+              callback({"ip": d.ip, "name": "EasyBulb", "description": "This is EasyBulb lamp", "type": "lamp", "connectionType": "easybulb"});
             }else if (false) { //TODO
               //WeMo
-              callback({"ip": d.ip, "name": "wemo", "type": "lamp"});
+              callback({"ip": d.ip, "name": "WeMo", "description": "This is WeMo" "type": "lamp", "connectionType": "wemo"});
             }else{
               //Something else
             }

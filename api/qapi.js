@@ -2,11 +2,17 @@
 	var $ = require('jquery');
 	var apiai = require('apiai');
 	var LocalStorage = require('node-localstorage').LocalStorage;
-	localStorage = new LocalStorage('../storage');
+	var localStorage = new LocalStorage('./storage');
 	var Forecast = require('forecast');
 
 	String.prototype.contains = function(it) { return this.indexOf(it) != -1; };
 
+	module.exports.getHubId = function(){
+		return localStorage.getItem('hubId');
+	}
+	module.exports.getUserPassword = function(){
+		return localStorage.getItem('pass');
+	}
 	module.exports.getUserSecret = function(){
 		return localStorage.getItem('tokenCode');
 	}
@@ -32,11 +38,15 @@
 		return localStorage.getItem('hubToken');
 	}
 	module.exports.getUserLocation = function(callback){
+		console.log(1);
 		getUserLocation(callback);
 	}
 	function getUserLocation(callback) {
 		if(navigator.geolocation){
+			console.log(3);
 			navigator.geolocation.getCurrentPosition(callback);
+		}else{
+			console.log(2);
 		}
 		//position.coords.longitude
 		//position.coords.latitude

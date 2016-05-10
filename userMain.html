@@ -5,16 +5,37 @@
     <title>Q Hub</title>
     <script type="text/javascript">
     $ = require('jquery');
-    var extensions = require('./api/extensions')
+    var qapi = require('./api/qapi');
+    var extensions = require('./api/extensions');
     var spl = require('./api/speechProcessingLoop');
     var iot = require('./api/iot');
     var discover = require('./api/discover');
-
-    var qapi = require('.api/qapi');
-    var international = require('./api/international');
+    var DEVICES = null;
 
     discover.devices(function(discovered){
-      console.log(discovered);
+      if (discovered.length > 0){
+        console.log(discovered);
+        DEVICES = discovered;
+        //Register devices
+        $.ajax({
+          url: "",
+          type: "GET",
+          data: {user: qapi.getUserId(), password: qapi.getUserPassword(), hub: qapi.getHubId(), devices: DEVICES},
+          dataType: "json",
+          success: function(data){
+            if(data.error){
+              //Error
+              console.error(data.details);
+            }else{
+              //Success
+              console.log("devices added");
+            }
+          },
+          error: function(a, er){
+            console.error(er);
+          }
+        })
+      }
     });
 
     spl.beginSPL();
@@ -28,7 +49,7 @@
       }
 
       qSay("This hubs secret code is " + numbers , function() {
-        
+
       });
     }
     </script>

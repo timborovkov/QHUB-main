@@ -12,9 +12,17 @@
   var wemo = new Wemo();
   //MiLight & EasyBulb
   var Milight = require("milight");
+  //Hub's id
+  var hubId = qapi.getHubId();
+  //LocalStorage
+  var LocalStorage = require('node-localstorage').LocalStorage;
+	var localStorage = new LocalStorage('./storage');
+  //connected devices
+  var DEVICES = {};
+
 
   module.exports.performHomeAutomation = function(action, parameters, callback){
-    //TODO
+    processTask.smarthome({action: action, parameters: parameters});
     callback();
   }
 
@@ -104,5 +112,96 @@
     //Perform task
     //Tell server about it
 
-  }, 100);
+    $.ajax({
+      url: "http://api.anspirit.org/tasksForHub",
+      data: {hub: hubId},
+      type: "GET",
+      dataType: "json",
+      success: function(data){
+        if(data.tasks.length > 0){
+          //Got a task
+          console.log("Got a task");
+          for (var i = 0; i < data.tasks.length; i++) {
+            var task = data.tasks[i];
+            //Process each task
+            if (task.action.contains("smarthome")) {
+              //Smarthome action
+              processTask.smarthome(task);
+            }else if (task.action.contains("discover")) {
+              //Discover action
+              processTask.discover(task);
+            }
+          }
+        }else{
+          //No tasks
+        }
+      },
+      error: function(a, er){
+        console.error(er);
+      }
+    });
+
+  }, 10000);
+
+  var processTask = {
+    smarthome: function(task){
+      switch (task.action) {
+        case "smarthome.lights_on":
+          //Get device's id
+          var deviceId = task.options.id;
+          //Get device's connection type
+          var device = getDeviceById(deviceId);
+          var conType = device.connectionType;
+          //Turn on TODO
+          console.log("Turn "+conType+" with id "+deviceId+" on");
+          break;
+        case "smarthome.lights_off":
+          //Get device's id
+          var deviceId = task.options.id;
+          //Get device's connection type
+          var device = getDeviceById(deviceId);
+          var conType = device.connectionType;
+          //Turn off TODO
+          console.log("Turn "+conType+" with id "+deviceId+" off");
+          break;
+      }
+    },//--> smarthome task end
+    discover: function(task){
+      if(task.action.contains('devices')){
+        //Discover devices and put them into database
+        discover.devices(function(d){
+          if (discovered.length > 0){
+            console.log(discovered);
+            DEVICES = discovered;
+            //Register devices
+            $.ajax({
+              url: "http://api.anspirit.org/hubDevices/add",
+              type: "GET",
+              data: {user: qapi.getUserId(), password: qapi.getUserPassword(), hub: qapi.getHubId(), devices: DEVICES},
+              dataType: "json",
+              success: function(data){
+                if(data.error){
+                  //Error
+                  console.error(data.details);
+                }else{
+                  //Success
+                  console.log("devices added");
+                }
+              },
+              error: function(a, er){
+                console.error(er);
+              }
+            })
+          }
+        });
+      }
+    }//--> discover task end
+  }//--> processTask array end
+  function getDeviceById(id){
+    for (var i = 0; i < DEVICES.length; i++) {
+      if (DEVICES[i].id == id) {
+        return DEVICES[i];
+      }
+    }
+  };
 })();

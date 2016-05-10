@@ -8,7 +8,7 @@
   $.getJSON("rules.json", function(extensions) {
     extList = extensions;
     for(var i = 0; i < extList.length; i++){
-      extReq[i] = require("rules/" + extList[i]["name"] + "/hub.js");
+      extReq[i] = require("../rules/" + extList[i]["name"] + "/hub.js");
     }
   });
   module.exports.extensions = function(){

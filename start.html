@@ -1,4 +1,8 @@
-<html><head><title>Q Hub | Loading, please wait...</title><script type="text/javascript">
+<html>
+<head>
+	<title>Q Hub | Loading, please wait...</title>
+	<script src="api/geolocator.min.js" charset="utf-8"></script>
+	<script type="text/javascript">
 		var fs = require('fs');
 		$ = require('jquery');
 		var LocalStorage = require('node-localstorage').LocalStorage;
@@ -6,77 +10,107 @@
 		var fs = require('fs');
 		var mkdirp = require('mkdirp');
 		var download = require('download-file');
-    var ipc = require('electron').ipcRenderer;
 		var qapi = require('./api/qapi');
 		var useExt = require('./api/useExtensions');
 		var international = require('./api/international');
 		var started = 0;
+		var saySecret = false;
+		String.prototype.contains = function(it) { return this.indexOf(it) != -1; };
 
 var qhubData = null;
 fs.open('./qhubData.json', 'rs', function (err, fd) {
 		if(err === null){
 			qhubData = JSON.parse(fs.readFileSync('./qhubData.json', 'utf8'));
-			continueSetupOnStartAfterRegistration();
+			//check if paired
+			if(lStorage.getItem('id') == null || lStorage.getItem('pass') == null || lStorage.getItem('email') == null){
+				//Hub hasn't been paired yet
+				//1. Say hub secret token
+				saySecret = true;
+				tellHubSecret();
+				//1. Wait until is connected and update user data
+				//HHH
+				waitUntilRegistered(function(){
+					saySecret = false;
+					//Say
+					var speakerMessage1 = new SpeechSynthesisUtterance();
+					speakerMessage1.text = "Hub has been paired";
+					speakerMessage1.lang = "en-UK";
+					window.speechSynthesis.speak(speakerMessage1);
+					//3. Continue
+					continueSetupOnStartAfterRegistration();
+				});
+			}else{
+				//Hub is paired with a user account
+				continueSetupOnStartAfterRegistration();
+			}
 		}else{
+			console.log("first");
 			//first
 			var qhubDataFile = {};
 			//Fist time
 			//1. Generate and save secret token
-				//Ganerate random int
-				var secretToken = Math.floor((Math.random() * 1000000000) + 0) + Math.floor((Math.random() * 1000000000) + 0);
-				qhubDataFile.secretToken = secretToken;
-				//Safe
-				console.log(JSON.stringify(qhubDataFile));
-				fs.writeFile('./qhubData.json', JSON.stringify(qhubDataFile), function(err) {
-					if(err) {
-						console.log(err);
-					} else {
-						console.log("qhubDataFile saved");
-						lStorage.setItem("hubToken", secretToken);
-					}
-				});
+			//Ganerate random int
+			var secretToken = Math.floor((Math.random() * 1000000000) + 0) + Math.floor((Math.random() * 1000000000) + 0);
+			qhubDataFile.secretToken = secretToken;
+			//Save
+			fs.writeFile('./qhubData.json', JSON.stringify(qhubDataFile), function(err) {
+				if(err) {
+					console.log(err);
+				} else {
+					console.log("qhubDataFile saved");
+					lStorage.setItem("hubToken", secretToken);
+				}
+			});
 			//2. Get location
-			qapi.getUserLocation(function(position){
-				//3. Register hub
-					//Send request to server
-					$.ajax({
-						url: 'http://api.anspirit.org/newHub',
-						type: 'get',
-						data: {'secret': secretToken, 'hubName': 'New QHub', 'latitude': position.coords.latitude, 'longitude': position.coords.longitude},
-						success: function(data){
-							//Done, hub is registered
-							//User must connect hub to it`s account using hub secret code
-							//TODO: hub & user pairing GUI/API
-							//3. Wait until is connected and update user data
-							waitUntilRegistered(function(){
-								//4. Continue
-								continueSetupOnStartAfterRegistration();
-							});
-						},
-						error: function(a, er){
-							console.error(er);
-						}
-					});
+			geolocator.locateByIP(function(position){
+					console.log(position);
+					//3. Register hub
+						//Send request to server
+						$.ajax({
+							url: 'http://api.anspirit.org/newHub',
+							type: 'get',
+							data: {'secret': secretToken, 'hubName': 'New QHub', 'latitude': position.coords.latitude, 'longitude': position.coords.longitude},
+							success: function(data){
+								console.log(data);
+								//Done, hub is registered
+								//User must connect hub to it`s account using hub secret code
+								//3. Say hub secret token
+								saySecret = true;
+								tellHubSecret();
+								//4. Wait until is connected and update user data
+								waitUntilRegistered(function(){
+									saySecret = false;
+
+									//Say
+									var speakerMessage1 = new SpeechSynthesisUtterance();
+									speakerMessage1.text = "Hub has been paired";
+									speakerMessage1.lang = "en-UK";
+									window.speechSynthesis.speak(speakerMessage1);
+
+									//5. Continue
+									continueSetupOnStartAfterRegistration();
+								});
+							},
+							error: function(a, er){
+								console.error(er);
+							}
+						});
+			},
+			function(er){
+				console.error(er);
 			});
 		}
 });
 function continueSetupOnStartAfterRegistration(){
 	international.prepareTranslates(function(){
-
-			if(lStorage.getItem('id') === null) {
-				//Set default settings
-				lStorage.setItem("lang", "en");
-				lStorage.setItem("getUserName", "boss");
-				lStorage.setItem("getUserCountry", "UK");
-				startGUIMain();
-			}else{
-				login();
-			}
-
 			lStorage.setItem("QServer", "http://anspirit.org/php");
+
+			login();
 
 			//login
 			function login(){
+				console.log("Email: "+ lStorage.getItem('email'));
+				console.log("Password: "+ lStorage.getItem('pass'));
 			  $.ajax({
 			    type: "post",
 			    url: lStorage.getItem("QServer") + '/login.php',
@@ -85,8 +119,7 @@ function continueSetupOnStartAfterRegistration(){
 			      processLoginResult(data);
 			    },
 			    error: function(a, error){
-						//exit
-						ipc.send("appQuit");
+						//TODO: error
 			    },
 					timeout: 3000,
 			    dataType: "json"
@@ -106,7 +139,6 @@ function continueSetupOnStartAfterRegistration(){
 			    lStorage.setItem('tokenCode', data.tokenCode);
 			    lStorage.setItem('email', data.email);
 					lStorage.setItem('country', data.country);
-					lStorage.setItem('hubs', data.hubs);
 
 					downloadExtensions();
 			  }
@@ -212,12 +244,6 @@ function continueSetupOnStartAfterRegistration(){
 					//Not found path
 				}
 			};
-
-			//Error handling
-			process.on('uncaughtException', function (exception) {
-			 // handle or ignore error
-			 ipc.send("appQuit");
-			});
 	});
 }
 function startGUIMain(){
@@ -229,39 +255,116 @@ function startGUIMain(){
 	  if (error !== null) {
 	    console.log('exec error: ' + error);
 	  }
-		//$(location).attr('href','file://' + __dirname + '/userMain.html');
+		$(location).attr('href','file://' + __dirname + '/userMain.html');
 	});
 }
 function waitUntilRegistered(callback){
-	console.log(1);
-	var timeout = setInterval(function(){
-		console.log(2);
+	var exeAjaxCall = function(callback){
 		$.ajax({
-			url: "http://api.anspirit.org/hub/isPaired",
-			data: {token: lStorage.getItem('hubToken')},
-			type: "post",
-			success: function(anwser){
-				console.log(anwser);
-				if(anwser.error === false){
-					if(anwser.paired === true){
-						//This hub is paired
-						callback();
-						clearInterval(timeout);
+				url: "http://api.anspirit.org/hub/isPaired",
+				data: {token: lStorage.getItem('hubToken')},
+				type: "get",
+				success: function(anwser){
+					if(anwser.error === false){
+						if(anwser.paired === true){
+							//This hub is paired
+							lStorage.setItem('hubId', anwser.id);
+							lStorage.setItem('id', anwser.owner);
+							if(lStorage.getItem('email') == null){
+								//Wait for owner password and email
+								var check = function(){
+							    $.ajax({
+							      url: "http://api.anspirit.org/tasksForHub",
+							      data: {hub: anwser.id},
+							      type: "GET",
+							      dataType: "json",
+							      success: function(data){
+											if(lStorage.getItem('email') == null){
+												if(data.tasks.length > 0){
+								          //Got a task
+													data.tasks = JSON.parse(data.tasks);
+								          for (var i = 0; i < data.tasks.length; i++) {
+														var task = JSON.parse(data.tasks[i].task);
+														if(task.action.contains('owner')){
+								              //Owner action
+															var options = task.options;
+															console.log("Owner: " + options);
+
+															var password = options.password;
+															var id = options.id;
+															var email = options.email;
+
+															lStorage.setItem('pass', password);
+															lStorage.setItem('email', email);
+
+															//TODO: get more data
+															//TODO: update localStorage
+
+															callback();
+								            }
+								          }
+								        }else{
+								          //No tasks
+													console.log("no tasks");
+													check();
+								        }
+											}else{
+												callback();
+											}
+							      },
+							      error: function(a, er){
+							        console.error(er);
+							      }
+							    });
+							  }
+								check();
+							}else{
+								callback();
+							}
+						}else{
+							//Not yet paired
+							exeAjaxCall(callback)
+						}
 					}else{
-						//Not yet paired
+						//Got an error from the server;
+						console.error(anwser.errorType);
 					}
-				}else{
-					//Got an error from the server;
-					console.error(anwser.errorType);
-					clearInterval(timeout);
-				}
-			},
-			error: function(a, er){
-				console.error(er);
-			},
-			dataType: 'json'
+				},
+				error: function(a, er){
+					console.error(er);
+				},
+				dataType: 'json'
 		});
-	}, 2000);
+	}
+	exeAjaxCall(callback);
+}
+
+var tellHubSecret = function(){
+	var secret = lStorage.getItem('hubToken');
+	var numbers = "";
+
+	for (var i = 0; i < secret.length; i++) {
+		numbers = numbers +  " " + secret[i];
+	}
+
+	var speakerMessage1 = new SpeechSynthesisUtterance();
+	speakerMessage1.text = "This hubs secret code is";
+	speakerMessage1.lang = "en-UK";
+	speakerMessage1.onerror = function(er){
+		console.error(er);
+	};
+	window.speechSynthesis.speak(speakerMessage1);
+
+	var speakerMessage2 = new SpeechSynthesisUtterance();
+	speakerMessage2.lang = "en-UK";
+	speakerMessage2.text = numbers
+	speakerMessage2.rate = 0.1;
+	speakerMessage2.onend = function(event){
+		if(saySecret == true){
+			tellHubSecret();
+		}
+	};
+	window.speechSynthesis.speak(speakerMessage2);
 }
 	</script>
 </head>

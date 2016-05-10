@@ -4,14 +4,14 @@
   */
   var qapi = require('./qapi');
   global.qapi = qapi;
-  var international = require('./international'),
-  ext = require('./extensions');
-  a = 1,
-  wakeUpListener = new webkitSpeechRecognition(),
-  mainListener = new webkitSpeechRecognition(),
-  speakerMessage = new SpeechSynthesisUtterance(),
-  voices = null,
-  lastActionHappened = 0;
+  var international = require('./international');
+  var ext = require('./extensions');
+  var a = 1;
+  var wakeUpListener = new webkitSpeechRecognition();
+  var mainListener = new webkitSpeechRecognition();
+  var speakerMessage = new SpeechSynthesisUtterance();
+  var voices = null;
+  var lastActionHappened = 0;
 
   /*
   *
@@ -38,7 +38,9 @@
   function afterGetSpeech(speech){
     lastActionNow();
     if(speech.contains("secret") && speech.contains("code")){
-      tellHubSecret();
+      qSay("My secret code is " + qapi.getHubSecret(), function(){
+        callBack();
+      });
       eval("up()");
     }else{
       doSpeechProcessing(speech, function(){
